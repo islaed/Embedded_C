@@ -30,7 +30,6 @@ int main()
         ptr++;
         counter_str1++;
     }
-    printf("\n");
 
     // Находим длину подстроки
     ptr = str2;
