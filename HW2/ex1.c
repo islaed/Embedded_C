@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define N 3
+#define N 5
 
 int main()
 {
@@ -13,7 +13,7 @@ int main()
         for(int j = 0; j < N; j++)
         {
             a[i][j] = j + 1 + (i * N);
-            printf("%d ", a[i][j]);
+            printf("%3d ", a[i][j]);
         }
         printf("\n");
     }
