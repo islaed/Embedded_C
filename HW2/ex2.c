@@ -7,7 +7,7 @@
 int main()
 {
     int a[N];
-    int b[N];
+    int temp;
 
     for(int i = 0; i < N; i++)
     {
@@ -16,10 +16,16 @@ int main()
     }
     printf("\n");
 
+    for(int i = 0; i < N/2; i++)
+    {
+        temp = a[i];
+        a[i] = a[N - 1 - i];
+        a[N - 1 - i] = temp;
+    }
+
     for(int i = 0; i < N; i++)
     {
-        b[i] = a[N - 1 - i];
-        printf("%d ", b[i]);
+        printf("%d ", a[i]);
     }
     printf("\n");
 
