@@ -76,7 +76,7 @@ void run(char *arguments[], char *files_path)
     if (pid == 0)
     {
         execv(full_path, arguments);
-        perror("execv failed");
+        printf("Ошибка при запуске файла!");
         exit(1);
     }
     wait(NULL);
