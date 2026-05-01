@@ -8,16 +8,15 @@ void init_list(client_list *list)
 }
 
 // Добавление клиента
-void add_abonent(client_list *list, char *client_name)
+void add_client(client_list *list, msgbuf message_rcv)
 {
     // Выделяем память под нового клиента
     client_node *new_client = (client_node*)malloc(sizeof(client_node));
 
-    printf("\nВведите имя абонента: ");
-    scanf("%s", new_client->name);
-
-    // Записываем имя клиента
-    strcpy(new_client->name, client_name);
+    // Записываем данные клиента
+    new_client->client_pid = message_rcv.client_pid;
+    new_client->client_key = message_rcv.client_key;
+    strcpy(new_client->name, message_rcv.name);
 
     new_client->next = NULL;
     new_client->prev = list->tail;
@@ -34,30 +33,39 @@ void add_abonent(client_list *list, char *client_name)
     }
 }
 
-// Поиск клиентов по имени
-void find_client(client_list *list)
+// Удаление клиента
+void remove_client(client_list *list, msgbuf message_rcv)
 {
-    printf("Поиск абонентов по имени.\n");
-    int flag = 0;
-    char a_name[NAME_SIZE];
-    printf("Введите имя абонента, которого хотите найти: ");
-    scanf("%s", a_name);
-
-    for(client_node *current_client = list->head; current_client != NULL; current_client = current_client->next)
+    client_node *current_client = list->head;
+    while(current_client != NULL)
     {
-        if(string_equality(current_client->name, a_name))
+        client_node *next_client = current_client->next; // Сохраняем ссылку на следующий
+
+        if(current_client->client_pid == message_rcv.client_pid)
         {
-            flag++;
+            if(current_client->prev != NULL)
+                current_client->prev->next = current_client->next;
+            else
+                list->head = current_client->next; // Удаляем первый элемент
+
+            if(current_client->next != NULL)
+                current_client->next->prev = current_client->prev;
+            else
+                list->tail = current_client->prev; // Удаляем последний элемент
+
+            free(current_client);
         }
+        current_client = next_client;
     }
-    if(!flag) printf("Абонентов с таким именем не найдено!\n");
 }
 
-// Вывод всех абонентов
-void show_clients(client_list *list)
+// Получение списка имени клиентов
+void get_clients_list(client_list *list, msglist *message_list)
 {
+    int counter = 0;
     for(client_node *current_client = list->head; current_client != NULL; current_client = current_client->next)
     {
-        printf("Имя:%s", current_client->name);
+        strcpy(message_list->auth_clients[counter], current_client->name);
+        counter++;
     }
 }

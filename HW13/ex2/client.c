@@ -1,72 +1,40 @@
-#include <stdio.h>
-#include <mqueue.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
-#include <string.h>
+#include "dlist.h"
+#include <pthread.h>
+#include <unistd.h>
 
-#define Q_NAME "."
-
-typedef struct msgbuf {
-    long mtype;
-    char mtext[256];
-} msgbuf;
-
-// Отправка сообщения
-void message_send(int qid, msgbuf message_snd)
-{
-    if(message_snd.mtype == 1)
-    {
-        if(msgsnd(qid, &message_snd, sizeof(message_snd.mtext), IPC_NOWAIT) == -1)
-        {
-            printf("Ошибка отправки сообщения!\n");
-            return;
-        }
-    }
-    else
-    {
-        message_snd.mtype = 2;
-        if(msgsnd(qid, &message_snd, sizeof(message_snd.mtext), IPC_NOWAIT) == -1)
-        {
-            printf("Ошибка отправки сообщения!\n");
-            return;
-        }
-    }
-}
-
-// Авторизация на сервере
-void login(int qid, char *client_name)
-{
-    msgbuf message_snd;
-    message_snd.mtype = 1;
-    strcpy(message_snd.mtext, client_name);
-
-    message_send(qid, message_snd);
-}
+#define Q_MAIN "."
 
 int main()
 {
-    int qid;
-    char name[256];
+    key_t key_main;
+    key_main = ftok(Q_MAIN, 0);
 
-    key_t key;
-    key = ftok(Q_NAME, 0);
-    if(key == -1)
-    {
-        printf("Ошибка!\n");
-        return 1;
-    }
-    qid = msgget(key, 0);
+    pid_t pid = getpid();
+    key_t key_client;
+    key_client = ftok(Q_MAIN, pid);
+
+    char name[MAX_NAME_SIZE];
+    printf("Введите своё имя: ");
+    scanf("%s", name);
+
+    msgbuf client;
+    client.mtype = 1;
+    client.client_key = key_client;
+    client.client_pid = pid;
+    strcpy(client.name, name);
+
+    int qid = msgget(key_main, 0);
     if(qid == -1)
     {
         printf("Ошибка открытия очереди!\n");
         return 1;
     }
 
-    printf("Введите своё имя: ");
-    while(1)
+    int msg_snd = msgsnd(qid, &client, sizeof(client) - sizeof(long), IPC_NOWAIT);
+    if(msg_snd == -1)
     {
-        scanf("%s", name);
-        login(qid, name);
+        printf("Ошибка отправки сообщения!\n");
+        return 1;
     }
 
     return 0;
