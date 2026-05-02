@@ -60,7 +60,7 @@ void remove_client(client_list *list, msgbuf message_rcv)
 }
 
 // Получение списка имени клиентов
-void get_clients_list(client_list *list, msglist *message_list)
+int get_clients_list(client_list *list, msgbuf *message_list)
 {
     int counter = 0;
     for(client_node *current_client = list->head; current_client != NULL; current_client = current_client->next)
@@ -68,4 +68,5 @@ void get_clients_list(client_list *list, msglist *message_list)
         strcpy(message_list->auth_clients[counter], current_client->name);
         counter++;
     }
+    return counter;
 }

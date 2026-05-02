@@ -13,21 +13,31 @@
 */
 
 // Отправка сообщения
-void message_send(client_list *client_list, int mtype, char name[MAX_NAME_SIZE], char text[MAX_TEXT_SIZE])
+void message_send(client_list *client_list, int mtype, msgbuf message_rcv)
 {
     int msg_snd;
+    int client_msgid;
+    msgbuf message_snd;
+    message_snd.mtype = mtype;
+    // printf("Отправка сообщения! mtype = %d\n", mtype);
 
     // Проверяем mtype
     switch(mtype)
     {
         case 2:
             // Если mtype == 2, то получаем список клиентов и отправляем его
-            msglist list;
-            list.mtype = mtype;
-            get_clients_list(client_list, &list);
+            printf("===== Приоритет 2 =====\n");
+            int clients_count = get_clients_list(client_list, &message_snd);
+            printf("Список пользователей:\n");
+            for(int i = 0; i < clients_count; i++)
+            {
+                printf("%s\n", message_snd.auth_clients[i]);
+            }
+            message_snd.clients_count = clients_count;
             for(client_node *current_client = client_list->head; current_client != NULL; current_client = current_client->next)
             {
-                msg_snd = msgsnd(current_client->client_key, &list, sizeof(list) - sizeof(long), IPC_NOWAIT);
+                client_msgid = msgget(current_client->client_key, 0666);
+                msg_snd = msgsnd(client_msgid, &message_snd, sizeof(message_snd) - sizeof(long), IPC_NOWAIT);
                 if(msg_snd == -1)
                 {
                     printf("Ошибка отправки сообщения!\n");
@@ -38,14 +48,16 @@ void message_send(client_list *client_list, int mtype, char name[MAX_NAME_SIZE],
         
         case 4:
             // Если mtype == 4, то создаём сообщение с именем и текстом и отправляем его
-            msgbuf message_snd;
-            message_snd.mtype = mtype;
-            strcpy(message_snd.name, name);
-            strcpy(message_snd.text, text);
+            printf("===== Приоритет 4 =====\n");
+            strcpy(message_snd.name, message_rcv.name);
+            strcpy(message_snd.text, message_rcv.text);
+            printf("Отправлено: [%s]: %s\n", message_snd.name, message_snd.text);
+
 
             for(client_node *current_client = client_list->head; current_client != NULL; current_client = current_client->next)
             {
-                msg_snd = msgsnd(current_client->client_key, &message_snd, sizeof(message_snd) - sizeof(long), IPC_NOWAIT);
+                client_msgid = msgget(current_client->client_key, 0666);
+                msg_snd = msgsnd(client_msgid, &message_snd, sizeof(message_snd) - sizeof(long), IPC_NOWAIT);
                 if(msg_snd == -1)
                 {
                     printf("Ошибка отправки сообщения!\n");
@@ -69,25 +81,35 @@ void message_recieve(client_list *client_list, int qid)
         printf("Ошибка чтения сообщения!\n");
         return;
     }
-    printf("Приоритет: %ld, pid: %d, key: %ld, имя: %s, текст: %s\n", message_rcv.mtype, message_rcv.client_pid, (long)message_rcv.client_key,
-        message_rcv.name, message_rcv.text);
+    // printf("Приоритет: %ld, pid: %d, key: %ld, имя: %s, текст: %s\n",
+    //     message_rcv.mtype,
+    //     message_rcv.client_pid,
+    //     (long)message_rcv.client_key,
+    //     message_rcv.name,
+    //     message_rcv.text
+    // );
+    
     switch(message_rcv.mtype)
     {
         case 1:
             // Если mtype == 1, то записываем данные клиента в список и осведомляем остальных
+            printf("===== Приоритет 1 =====\n");
             add_client(client_list, message_rcv);
             printf("Подключился: %s\n", message_rcv.name);
-            message_send(client_list, 2, NULL, NULL);
+            message_send(client_list, 2, message_rcv);
             break;
         case 3:
             // Если mtype == 3, то отправляем сообщение с текстом и именем всем клиентам
-            printf("Сообщение: [%s] %s\n", message_rcv.name, message_rcv.text);
-            message_send(client_list, 4, message_rcv.name, message_rcv.text);
+            printf("===== Приоритет 3 =====\n");
+            printf("Получено: [%s]: %s\n", message_rcv.name, message_rcv.text);
+            message_send(client_list, 4, message_rcv);
             break;
         case 5:
             // Если mtype == 5, то удаляем клиента из списка и осведомляем остальных
+            printf("===== Приоритет 5 =====\n");
+            printf("Удаление клиента: %s\n", message_rcv.name);
             remove_client(client_list, message_rcv);
-            message_send(client_list, 2, NULL, NULL);
+            message_send(client_list, 2, message_rcv);
             break;
     }
 }
@@ -120,6 +142,7 @@ int main()
     {
         message_recieve(&clients, qid);
     }
+    
 
     return 0;
 }

@@ -11,13 +11,7 @@
 #define MAX_TEXT_SIZE 256 // Максимальный размер текста в сообщении
 #define MAX_CLIENTS 32
 
-// Структура для отправки списка клиентов
-typedef struct msglist
-{
-    long mtype;
 
-    char auth_clients[MAX_CLIENTS][MAX_NAME_SIZE];
-} msglist;
 
 // Структура для отправки сообщений
 typedef struct msgbuf
@@ -29,6 +23,8 @@ typedef struct msgbuf
 
     char name[MAX_NAME_SIZE]; // Имя клиента
     char text[MAX_TEXT_SIZE]; // Текст сообщения клиента
+    char auth_clients[MAX_CLIENTS][MAX_NAME_SIZE]; // Список клиентов
+    int clients_count; // Количество подключенных клиентов
 } msgbuf;
 
 // Структура клиента для двусвязного списка
@@ -53,6 +49,6 @@ typedef struct client_list
 void init_list(client_list *list);
 void add_client(client_list *list, msgbuf message_rcv);
 void remove_client(client_list *list, msgbuf message_rcv);
-void get_clients_list(client_list *list, msglist *message_list);
+int get_clients_list(client_list *list, msgbuf *message_list);
 
 #endif
