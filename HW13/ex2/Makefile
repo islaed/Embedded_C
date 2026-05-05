@@ -8,13 +8,10 @@ $(SERVER): server.c  $(OBJECT)
 	gcc server.c $(OBJECT) -o $(SERVER)
 
 $(CLIENT): client.c $(OBJECT)
-	gcc client.c $(OBJECT) -lncurses -o $(CLIENT)
+	gcc client.c $(OBJECT) -lpthread -lncursesw -o $(CLIENT)
 
 $(OBJECT): dlist.c
 	gcc -c dlist.c -o $(OBJECT)
-
-test: test.c
-	gcc test.c -lncurses -o test
 
 clean:
 	rm -rf $(SERVER) $(CLIENT) $(OBJECT)

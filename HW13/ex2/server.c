@@ -28,7 +28,7 @@ void message_send(client_list *client_list, int mtype, msgbuf message_rcv)
             // Если mtype == 2, то получаем список клиентов и отправляем его
             printf("===== Приоритет 2 =====\n");
             int clients_count = get_clients_list(client_list, &message_snd);
-            printf("Список пользователей:\n");
+            printf("Отправляем список пользователей:\n");
             for(int i = 0; i < clients_count; i++)
             {
                 printf("%s\n", message_snd.auth_clients[i]);
@@ -40,8 +40,8 @@ void message_send(client_list *client_list, int mtype, msgbuf message_rcv)
                 msg_snd = msgsnd(client_msgid, &message_snd, sizeof(message_snd) - sizeof(long), IPC_NOWAIT);
                 if(msg_snd == -1)
                 {
-                    printf("Ошибка отправки сообщения!\n");
-                    return;
+                    printf("Ошибка отправки сообщения для %s!\n", message_snd.name);
+                    continue;;
                 }
             }
             break;
@@ -60,8 +60,8 @@ void message_send(client_list *client_list, int mtype, msgbuf message_rcv)
                 msg_snd = msgsnd(client_msgid, &message_snd, sizeof(message_snd) - sizeof(long), IPC_NOWAIT);
                 if(msg_snd == -1)
                 {
-                    printf("Ошибка отправки сообщения!\n");
-                    return;
+                    printf("Ошибка отправки сообщения для %s!\n", message_snd.name);
+                    continue;
                 }
             }
             break;
@@ -143,6 +143,5 @@ int main()
         message_recieve(&clients, qid);
     }
     
-
     return 0;
 }
