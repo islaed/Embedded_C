@@ -22,7 +22,7 @@ int main()
     // Задаём данные сервера, к которому хотим подключиться
     memset(&serv, 0, sizeof(serv));
     serv.sin_family = AF_INET;
-    serv.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // Ставим серверу адрес 127.0.0.1
+    inet_pton(AF_INET, "127.0.0.1", &serv.sin_addr);
     serv.sin_port = htons(8080);
 
     // Подключаемся к серверу
